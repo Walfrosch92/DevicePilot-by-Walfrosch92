@@ -1,0 +1,19 @@
+{
+  "Localization": {
+    "Audio Output Device":                "Audio Output Device",
+    "Show device name on button":         "Show device name on button",
+    "Button Action":                      "Button Action",
+    "Toggle Mute":                        "Toggle Mute",
+    "Switch Microphone":                  "Switch Microphone",
+    "Microphone Device":                  "Microphone Device",
+    "Default Microphone":                 "-- Default Microphone --",
+    "Toggle Between 2 Devices":           "Toggle Between 2 Devices",
+    "Set as Default":                     "Set as Default",
+    "Display Name (Button)":              "Display Name (Button)",
+    "Toggle Mute / Live":                 "Toggle Mute / Live",
+    "Switch Camera":                      "Switch Camera",
+    "Reload cameras":                     "Reload cameras",
+    "Reload devices":                     "Reload devices",
+    "Saved":                              "Saved"
+  }
+}
