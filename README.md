@@ -1,21 +1,39 @@
 # Device Pilot – Ulanzi Deck Plugin
 
-A plugin for the **Ulanzi Stream Controller** (D200 and compatible) that gives you one-tap system-wide control over audio output, microphone, and virtual camera on Windows.
+One-tap system-wide control over **audio output**, **microphone**, and **virtual camera** for the Ulanzi Stream Controller (D200 and compatible) on Windows.
 
 ---
 
 ## Features
 
-| Button Type | Available Actions |
+| Button | Available Actions |
 |---|---|
-| **Audio Output** | Set a device as default · Toggle mute · Toggle between 2 devices |
-| **Microphone** | Toggle mute · Set a device as default · Toggle between 2 devices |
+| **Audio Output** | Set as default · Toggle mute · Toggle between 2 devices |
+| **Microphone** | Toggle mute · Set as default · Toggle between 2 devices |
 | **Camera** | Mute / unmute virtual cam (black frame ↔ live) · Switch between 2 physical cameras |
 
-- Button icons update live to reflect the current mute/active state
-- Device names are shown directly on the button
-- Windows toast notifications on every action
-- No admin rights required for audio – camera switching also runs without elevation
+- Button icons update live to reflect the current state
+- Device names shown directly on the button
+- Windows toast notification on every action
+- No admin rights required
+
+---
+
+## How the camera button works
+
+The camera button does **not** use the Windows Device Manager to enable or disable a physical camera. Instead it runs a small Python service (`main.py`) that:
+
+1. Opens a physical webcam with OpenCV
+2. Forwards every frame to a **Unity Capture** virtual DirectShow device via `pyvirtualcam`
+
+**Muted** → the service sends a plain black frame instead of the real video feed
+**Switching** → swaps to a different physical camera between frames (no restart needed)
+
+The virtual device appears as **"Unity Video Capture"** in any video conferencing app (Teams, Zoom, OBS, etc.). Your physical webcam is **never disabled** — only the forwarded image is controlled.
+
+### First-time setup in your video conferencing app
+
+*Settings → Camera → select **Unity Video Capture***
 
 ---
 
@@ -41,18 +59,18 @@ The installer handles all missing dependencies automatically.
 powershell -ExecutionPolicy Bypass -File ".\installer\install.ps1"
 ```
 
-The installer will:
-- Check / install Node.js (via winget or direct download)
-- Check / install Python (via winget)
+The installer will automatically:
+- Install Node.js (via winget or direct download) if missing
+- Install Python (via winget) if missing
 - Copy the plugin to `%APPDATA%\Ulanzi\UlanziDeck\Plugins\`
-- Install Python dependencies (`opencv-python`, `pyvirtualcam`, `fastapi`, `uvicorn`, `pygrabber`)
-- Download and register the **Unity Capture** DirectShow filter (MIT license)
-- Register two background services in Windows Task Scheduler:
-  - `UlanziDevControlBridge` – Node.js HTTP bridge (port 3907)
-  - `UlanziVirtualCamService` – Python virtual cam service (port 5000)
+- Install Python packages: `opencv-python`, `pyvirtualcam`, `fastapi`, `uvicorn`, `pygrabber`
+- Download and register the **Unity Capture** DirectShow filter (MIT license, ~500 KB)
+- Register two autostart services in Windows Task Scheduler (no admin, user-level):
+  - `UlanziDevControlBridge` – Node.js HTTP bridge on port 3907
+  - `UlanziVirtualCamService` – Python virtual cam service on port 5000
 - Start both services immediately
 
-3. Start **Ulanzi Studio** – the *Device Control* plugin appears in the action list.
+3. Start **Ulanzi Studio** — the *Device Pilot* plugin appears in the action list.
 
 ---
 
@@ -62,7 +80,7 @@ The installer will:
 powershell -ExecutionPolicy Bypass -File ".\installer\uninstall.ps1"
 ```
 
-This removes both Task Scheduler tasks, stops all services, unregisters the Unity Capture DirectShow filter, and deletes the plugin folder.
+Removes both Task Scheduler tasks, stops all services, unregisters the Unity Capture DirectShow filter, and deletes the plugin folder.
 
 ---
 
@@ -70,37 +88,23 @@ This removes both Task Scheduler tasks, stops all services, unregisters the Unit
 
 ```
 Ulanzi Studio
-  └── plugin.js  (WebSocket, Ulanzi SDK)
+  └── plugin.js            (Node.js, Ulanzi SDK via WebSocket)
         └── HTTP → bridge.js  (Node.js, port 3907)
-                    ├── AudioControl.js  (COM: IPolicyConfig, IAudioEndpointVolume)
-                    ├── CameraControl.js  (PnP device enumeration)
-                    └── HTTP → main.py  (Python virtual cam, port 5000)
+                    ├── AudioControl.js    (COM: IPolicyConfig + IAudioEndpointVolume)
+                    ├── CameraControl.js   (DirectShow enumeration – list only)
+                    └── HTTP → main.py     (Python, port 5000)
+                                ├── OpenCV  – reads physical webcam
                                 └── pyvirtualcam → Unity Capture DirectShow filter
 ```
 
-### Services
+### Background services
 
 | Service | Port | Technology | Purpose |
 |---|---|---|---|
-| Native Bridge | 3907 | Node.js | Audio COM calls, PnP camera list |
-| Virtual Cam | 5000 | Python / FastAPI | Capture real webcam → virtual DirectShow device |
+| `UlanziDevControlBridge` | 3907 | Node.js | Audio COM calls, camera enumeration |
+| `UlanziVirtualCamService` | 5000 | Python / FastAPI | Webcam capture → virtual cam output |
 
-Both services start automatically at Windows login via Task Scheduler (no admin, `RunLevel Limited`).
-
----
-
-## How the virtual camera works
-
-`main.py` captures a physical webcam with OpenCV and forwards every frame to a **Unity Capture** virtual DirectShow device via `pyvirtualcam`.
-
-- **Muted** → sends a black frame instead of the real video
-- **Switching** → opens a new physical camera and closes the previous one between frames
-
-The virtual device appears as **"Unity Video Capture"** in any video conferencing app (Teams, Zoom, OBS, etc.).
-
-### First-time setup in Microsoft Teams
-
-*Settings → Devices → Camera → select **Unity Video Capture***
+Both services start automatically at Windows login (Task Scheduler, `RunLevel Limited` – no admin needed).
 
 ---
 
@@ -108,53 +112,51 @@ The virtual device appears as **"Unity Video Capture"** in any video conferencin
 
 ### Audio Output
 
-| Setting | Description |
+| Mode | What it does |
 |---|---|
-| Set as Default | Activates the selected device as the system default |
-| Toggle Mute | Mutes / unmutes the current default output |
-| Toggle Between 2 Devices | Switches between Device 1 and Device 2 on every press |
+| Set as Default | Makes the selected device the system default output |
+| Toggle Mute | Mutes / unmutes the current default output device |
+| Toggle Between 2 Devices | Alternates between Device 1 and Device 2 on each press |
 
 ### Microphone
 
-Same options as Audio Output, applied to recording devices.
+Same three modes as Audio Output, applied to recording (input) devices.
 
 ### Camera
 
-| Setting | Description |
+| Mode | What it does |
 |---|---|
-| Toggle Mute / Live | Switches the virtual cam between black frame and live video |
-| Switch Camera | Switches between Camera 1 and Camera 2 (by index) |
+| Toggle Mute / Live | Sends a black frame (muted) or the real webcam image (live) to the virtual cam |
+| Switch Camera | Alternates between Camera 1 and Camera 2 on each press |
 
-Camera indices are populated automatically from connected physical cameras when the property inspector is open.
+Camera dropdowns are populated automatically from all connected physical cameras when the property inspector is open (virtual devices like Unity Video Capture are excluded from the list).
 
 ---
 
 ## Troubleshooting
 
-**Bridge not ready / button shows error**
-- Make sure the Task Scheduler task `UlanziDevControlBridge` is running.
-- Restart it manually: *Task Scheduler → UlanziDevControlBridge → Run*
-- Or re-run the installer.
+**"Bridge not ready" on button press**
+- Check that the Task Scheduler task `UlanziDevControlBridge` is running.
+- Restart it: *Task Scheduler → UlanziDevControlBridge → Run*
+- Or simply re-run the installer.
 
-**Virtual cam not available in property inspector**
-- Click **Start service** in the camera button's property inspector.
-- The bridge will launch `main.py` as a fallback.
-- If the problem persists, check that Python and `pyvirtualcam` are installed:
+**Camera property inspector shows "Virtual cam service not available"**
+- Click **Start service** — the bridge will launch `main.py` as a fallback.
+- If it still fails, check that Python and all packages are installed:
   ```
   python -m pip install pyvirtualcam opencv-python fastapi uvicorn pygrabber
   ```
 
-**Camera not found / only "Unity Video Capture" listed**
-- The Python service enumerates cameras via `pygrabber` (DirectShow) and excludes virtual devices.
-- Ensure your webcam is connected before Ulanzi Studio starts.
-- Click **Reload cameras** in the property inspector.
+**Camera list is empty or only shows "Unity Video Capture"**
+- Make sure your webcam is connected before opening the property inspector.
+- Click **Reload cameras** to re-enumerate.
 
-**Unity Video Capture not showing in Teams/Zoom**
-- Re-register the DirectShow filter:
+**"Unity Video Capture" not showing in Teams / Zoom**
+- Re-register the DirectShow filter as Administrator:
   ```
   regsvr32 "%APPDATA%\Ulanzi\UlanziDeck\Plugins\com.ulanzi.devcontrol.ulanziPlugin\native\webcam-mute\UnityCaptureFilter64.dll"
   ```
-- Sign out and back in, or restart the conferencing app.
+- Restart the conferencing app.
 
 ---
 
