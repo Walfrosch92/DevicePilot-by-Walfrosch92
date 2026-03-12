@@ -1,7 +1,7 @@
 {
   "name": "ulanzi-devcontrol-bridge",
   "version": "1.0.0",
-  "description": "Native Windows API Bridge für das Ulanzi Device Control Plugin",
+  "description": "Native Windows API Bridge für das Ulanzi Device Pilot Plugin",
   "main": "bridge.js",
   "scripts": {
     "start": "node bridge.js",
