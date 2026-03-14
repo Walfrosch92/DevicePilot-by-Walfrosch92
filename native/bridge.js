@@ -163,7 +163,7 @@ async function dispatch(method, path, body, req) {
   // ── Windows-Benachrichtigung ─────────────────────────────────────────────
   if (method === 'POST' && path === '/notify') {
     if (!body.message) throw new Error('message fehlt');
-    return showWindowsNotification(body.title || 'Device Pilot', body.message);
+    return showWindowsNotification(body.title || 'Device Control', body.message);
   }
 
   const err404 = new Error(`Unbekannter Pfad: ${path}`);
@@ -245,7 +245,7 @@ async function showWindowsNotification(title, message) {
 [void][Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]
 $doc = [Windows.Data.Xml.Dom.XmlDocument]::new()
 $doc.LoadXml('<toast><visual><binding template="ToastGeneric"><text>${t}</text><text>${m}</text></binding></visual></toast>')
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Device Pilot').Show([Windows.UI.Notifications.ToastNotification]::new($doc))
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('Device Control').Show([Windows.UI.Notifications.ToastNotification]::new($doc))
 `;
 
   try {

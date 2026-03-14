@@ -1,5 +1,5 @@
 /**
- * app.js - Hauptdienst des Device Pilot Plugins
+ * app.js - Hauptdienst des Device Control Plugins
  * UUID: com.ulanzi.devcontrol (genau 4 Segmente = Hauptdienst)
  */
 

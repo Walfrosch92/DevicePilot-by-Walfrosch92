@@ -1,16 +1,16 @@
-﻿/**
+/**
  * DeviceControl.js
  *
- * Koordiniert alle Windows-SystemgerÃ¤t-Operationen Ã¼ber die Native Bridge
+ * Koordiniert alle Windows-Systemgerät-Operationen über die Native Bridge
  * (bridge.js auf http://localhost:3907).
  *
- * Die Native Bridge fÃ¼hrt PowerShell-Befehle aus, um:
- *   - AudiogerÃ¤te aufzulisten und das StandardgerÃ¤t zu wechseln
+ * Die Native Bridge führt PowerShell-Befehle aus, um:
+ *   - Audiogeräte aufzulisten und das Standardgerät zu wechseln
  *   - Mikrofone zu muten/unmuten
  *   - Kameras aufzulisten und zu aktivieren/deaktivieren
  *
  * Fallback: Falls die Bridge nicht erreichbar ist, versucht das Plugin
- * direkt Ã¼ber Electron's node integration zu arbeiten (falls aktiviert).
+ * direkt über Electron's node integration zu arbeiten (falls aktiviert).
  */
 
 class DeviceControl {
@@ -21,10 +21,10 @@ class DeviceControl {
     this._log = msg => console.log(`[DeviceControl] ${msg}`);
   }
 
-  // â”€â”€ Bridge-Verbindung â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Bridge-Verbindung ──────────────────────────────────────────────────────
 
   /**
-   * PrÃ¼ft, ob die Native Bridge lÃ¤uft. Wiederholt die PrÃ¼fung bis zur
+   * Prüft, ob die Native Bridge läuft. Wiederholt die Prüfung bis zur
    * erfolgreichen Verbindung.
    */
   async waitForBridge(onReady, onFail) {
@@ -49,7 +49,7 @@ class DeviceControl {
     }
   }
 
-  // â”€â”€ Audio Output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Audio Output ──────────────────────────────────────────────────────────
 
   async getAudioOutputDevices() {
     return this._api('/audio/outputs');
@@ -64,7 +64,7 @@ class DeviceControl {
     return devices.find(d => d.isDefault) || null;
   }
 
-  // â”€â”€ Mikrofon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Mikrofon ──────────────────────────────────────────────────────────────
 
   async getAudioInputDevices() {
     return this._api('/audio/inputs');
@@ -75,7 +75,7 @@ class DeviceControl {
   }
 
   async getMicrophoneMuteState(deviceId = null) {
-    // GET: deviceId als Query-Parameter (Body bei GET nicht verfÃ¼gbar)
+    // GET: deviceId als Query-Parameter (Body bei GET nicht verfügbar)
     const qs = deviceId ? `?deviceId=${encodeURIComponent(deviceId)}` : '';
     const r  = await this._fetch(`/audio/inputs/mute${qs}`, { method: 'GET' }, 5000);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -91,13 +91,13 @@ class DeviceControl {
     // returns { muted: boolean }
   }
 
-  // â”€â”€ Kamera (Liste) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Kamera (Liste) ────────────────────────────────────────────────────────
 
   async getCameraDevices() {
     return this._api('/cameras');
   }
 
-  // â”€â”€ Virtual Cam (Python-Dienst) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── Virtual Cam (Python-Dienst) ──────────────────────────────────────────
   // Steuert den Virtual-Cam-Dienst (native/webcam-mute/main.py).
   // Die Kamera bleibt immer aktiv; muted=true gibt ein schwarzes Bild aus.
 
@@ -121,7 +121,7 @@ class DeviceControl {
     // returns { muted: false }
   }
 
-  // â”€â”€ HTTP-Helfer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ── HTTP-Helfer ───────────────────────────────────────────────────────────
 
   async _api(path, body = null, method = null) {
     const isGet = method === 'GET' || body === null;
@@ -149,5 +149,3 @@ class DeviceControl {
 
 // Singleton
 const deviceControl = new DeviceControl();
-
-
