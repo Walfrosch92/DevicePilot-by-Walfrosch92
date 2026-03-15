@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Microphone</title>
+  <link rel="stylesheet" href="../libs/css/udpi.css">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanzideckApi.js"></script>
+</head>
+<body>
+<div class="udpi-wrapper">
+  <form id="property-inspector">
+
+    <div class="udpi-item">
+      <div class="udpi-item-label">Button Action</div>
+      <div class="udpi-radio-group">
+        <div class="udpi-radio-row">
+          <input type="radio" name="actionMode" id="modeMute" value="toggle-mute" checked>
+          <label for="modeMute">Toggle Mute</label>
+        </div>
+        <div class="udpi-radio-row">
+          <input type="radio" name="actionMode" id="modeSwitch" value="switch">
+          <label for="modeSwitch">Switch Microphone (1 device)</label>
+        </div>
+        <div class="udpi-radio-row">
+          <input type="radio" name="actionMode" id="modeToggle" value="toggle-device">
+          <label for="modeToggle">Toggle Between 2 Devices</label>
+        </div>
+      </div>
+    </div>
+
+    <hr class="udpi-divider">
+
+    <div class="udpi-item">
+      <div class="udpi-item-label" id="label1">Microphone Device</div>
+      <select class="udpi-item-value" name="deviceId" id="deviceSelect">
+        <option value="">-- Default Microphone --</option>
+      </select>
+    </div>
+
+    <div class="udpi-item" id="device2Row" style="display:none;">
+      <div class="udpi-item-label">Device 2</div>
+      <select class="udpi-item-value" name="deviceId2" id="deviceSelect2">
+        <option value="">-- none --</option>
+      </select>
+    </div>
+
+    <div class="udpi-item">
+      <div class="udpi-checkbox-row">
+        <input type="checkbox" name="showName" id="showName" value="true" checked>
+        <label for="showName">Show device name on button</label>
+      </div>
+    </div>
+
+    <div id="status" class="udpi-status" style="display:none;"></div>
+
+    <button type="button" class="udpi-btn secondary" id="refreshBtn">
+      Reload microphones
+    </button>
+  </form>
+</div>
+
+<script>
+'use strict';
+
+var BRIDGE     = 'http://127.0.0.1:3907';
+var form       = document.getElementById('property-inspector');
+var deviceSel  = document.getElementById('deviceSelect');
+var deviceSel2 = document.getElementById('deviceSelect2');
+var device2Row = document.getElementById('device2Row');
+var statusEl   = document.getElementById('status');
+var refreshBtn = document.getElementById('refreshBtn');
+var currentParams = {};
+var deviceList    = [];
+
+$UD.connect('com.ulanzi.devcontrol.microphone');
+
+$UD.onConnected(function() { loadDevices(); });
+
+$UD.onParamFromApp(function(msg) {
+  currentParams = msg.param || {};
+  applyParams();
+});
+
+$UD.onAdd(function(msg) {
+  currentParams = msg.param || {};
+  applyParams();
+});
+
+function loadDevices() {
+  showStatus('Loading microphones...', '');
+  fetch(BRIDGE + '/audio/inputs')
+    .then(function(r) { return r.json(); })
+    .then(function(devices) {
+      deviceList = Array.isArray(devices) ? devices : [];
+      buildDeviceLists(deviceList);
+      applyParams();
+    })
+    .catch(function(e) {
+      showStatus('Bridge not available: ' + e.message, 'err');
+    });
+}
+
+function buildDeviceLists(devices) {
+  var baseOpt  = '<option value="">-- Default Microphone --</option>';
+  var base2Opt = '<option value="">-- none --</option>';
+  deviceSel.innerHTML  = baseOpt;
+  deviceSel2.innerHTML = base2Opt;
+  if (!devices || devices.length === 0) {
+    showStatus('No microphones found.', 'err');
+    return;
+  }
+  devices.forEach(function(d) {
+    var label = d.name + (d.isDefault ? ' (Default)' : '');
+    var opt1 = document.createElement('option');
+    opt1.value = d.id; opt1.textContent = label;
+    deviceSel.appendChild(opt1);
+    var opt2 = document.createElement('option');
+    opt2.value = d.id; opt2.textContent = label;
+    deviceSel2.appendChild(opt2);
+  });
+  hideStatus();
+}
+
+function applyParams() {
+  if (currentParams.actionMode) {
+    var radio = document.querySelector('input[name="actionMode"][value="' + currentParams.actionMode + '"]');
+    if (radio) radio.checked = true;
+  }
+  if (currentParams.deviceId)  deviceSel.value  = currentParams.deviceId;
+  if (currentParams.deviceId2) deviceSel2.value = currentParams.deviceId2;
+  if (currentParams.showName !== undefined) {
+    document.getElementById('showName').checked =
+      currentParams.showName === true || currentParams.showName === 'true';
+  }
+  updateVisibility();
+}
+
+function updateVisibility() {
+  var mode = document.querySelector('input[name="actionMode"]:checked');
+  var isToggle = mode && mode.value === 'toggle-device';
+  device2Row.style.display = isToggle ? '' : 'none';
+}
+
+form.addEventListener('change', function() {
+  updateVisibility();
+  var values = Utils.getFormValue(form);
+  values.actionMode = document.querySelector('input[name="actionMode"]:checked').value;
+  values.showName   = document.getElementById('showName').checked;
+  var dev1 = deviceList.find(function(d) { return d.id === values.deviceId; });
+  var dev2 = deviceList.find(function(d) { return d.id === values.deviceId2; });
+  if (dev1) values.deviceName  = dev1.name;
+  if (dev2) values.deviceName2 = dev2.name;
+  currentParams = Object.assign({}, currentParams, values);
+  $UD.sendParamFromPlugin(currentParams);
+  showStatus('Saved', 'ok');
+  setTimeout(hideStatus, 2000);
+});
+
+refreshBtn.addEventListener('click', loadDevices);
+
+function showStatus(msg, type) {
+  statusEl.textContent   = msg;
+  statusEl.className     = 'udpi-status ' + type;
+  statusEl.style.display = 'block';
+}
+function hideStatus() { statusEl.style.display = 'none'; }
+</script>
+</body>
+</html>

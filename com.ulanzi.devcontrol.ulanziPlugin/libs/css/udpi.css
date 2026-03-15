@@ -1,0 +1,135 @@
+/* Ulanzi Stream Deck Plugin SDK - Property Inspector Styles */
+
+:root {
+  --udpi-bgcolor:        #282828;
+  --udpi-color:          #e8e8e8;
+  --udpi-accent:         #4a9eff;
+  --udpi-border:         #444444;
+  --udpi-input-bg:       #1e1e1e;
+  --udpi-input-border:   #555;
+  --udpi-label-color:    #aaaaaa;
+  --udpi-danger:         #e05252;
+  --udpi-success:        #52c252;
+  --udpi-font:           'Source Han Sans SC', 'Segoe UI', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background-color: var(--udpi-bgcolor);
+  color:            var(--udpi-color);
+  font-family:      var(--udpi-font);
+  font-size:        13px;
+  line-height:      1.5;
+  min-height:       100vh;
+}
+
+.udpi-wrapper { padding: 12px; }
+
+/* ── Formular-Items ──────────────────────────────────── */
+
+.udpi-item {
+  display:        flex;
+  flex-direction: column;
+  gap:            4px;
+  margin-bottom:  12px;
+}
+
+.udpi-item-label {
+  color:       var(--udpi-label-color);
+  font-size:   11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.udpi-item-value,
+input[type="text"],
+input[type="number"],
+select,
+textarea {
+  background:    var(--udpi-input-bg);
+  border:        1px solid var(--udpi-input-border);
+  border-radius: 4px;
+  color:         var(--udpi-color);
+  padding:       6px 8px;
+  width:         100%;
+  font-family:   var(--udpi-font);
+  font-size:     13px;
+  outline:       none;
+  transition:    border-color 0.15s;
+}
+
+.udpi-item-value:focus,
+input:focus,
+select:focus {
+  border-color: var(--udpi-accent);
+}
+
+select option { background: var(--udpi-input-bg); }
+
+/* ── Buttons ──────────────────────────────────────────── */
+
+.udpi-btn {
+  background:    var(--udpi-accent);
+  border:        none;
+  border-radius: 4px;
+  color:         #fff;
+  cursor:        pointer;
+  font-family:   var(--udpi-font);
+  font-size:     13px;
+  padding:       7px 14px;
+  transition:    opacity 0.15s;
+  width:         100%;
+  margin-top:    4px;
+}
+.udpi-btn:hover    { opacity: 0.85; }
+.udpi-btn:active   { opacity: 0.7; }
+.udpi-btn.danger   { background: var(--udpi-danger); }
+.udpi-btn.secondary { background: #3a3a3a; border: 1px solid var(--udpi-border); }
+
+/* ── Trennlinie ───────────────────────────────────────── */
+
+.udpi-divider {
+  border:        none;
+  border-top:    1px solid var(--udpi-border);
+  margin:        12px 0;
+}
+
+/* ── Status-Anzeige ───────────────────────────────────── */
+
+.udpi-status {
+  background:    var(--udpi-input-bg);
+  border:        1px solid var(--udpi-border);
+  border-radius: 4px;
+  color:         var(--udpi-label-color);
+  font-size:     11px;
+  padding:       6px 8px;
+  margin-top:    8px;
+}
+.udpi-status.ok   { border-color: var(--udpi-success); color: var(--udpi-success); }
+.udpi-status.err  { border-color: var(--udpi-danger);  color: var(--udpi-danger); }
+
+/* ── Checkbox ────────────────────────────────────────── */
+
+.udpi-checkbox-row {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+}
+.udpi-checkbox-row input[type="checkbox"] { width: auto; }
+
+/* ── Radio-Gruppe ────────────────────────────────────── */
+
+.udpi-radio-group { display: flex; flex-direction: column; gap: 6px; }
+.udpi-radio-row   { display: flex; align-items: center; gap: 8px; }
+.udpi-radio-row input[type="radio"] { width: auto; }
+
+/* ── Ladeanimation ───────────────────────────────────── */
+
+.udpi-loading {
+  color:       var(--udpi-label-color);
+  font-size:   11px;
+  text-align:  center;
+  padding:     8px;
+}

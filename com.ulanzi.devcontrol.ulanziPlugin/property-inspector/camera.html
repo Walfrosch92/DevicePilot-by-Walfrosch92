@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera</title>
+  <link rel="stylesheet" href="../libs/css/udpi.css">
+  <script src="../libs/js/constants.js"></script>
+  <script src="../libs/js/eventEmitter.js"></script>
+  <script src="../libs/js/utils.js"></script>
+  <script src="../libs/js/ulanzideckApi.js"></script>
+</head>
+<body>
+<div class="udpi-wrapper">
+  <form id="property-inspector">
+
+    <div class="udpi-item">
+      <div class="udpi-item-label">Display Name (Button)</div>
+      <input class="udpi-item-value" type="text" name="deviceName" id="deviceName"
+             placeholder="e.g. Camera" maxlength="32">
+    </div>
+
+    <div class="udpi-item">
+      <div class="udpi-item-label">Function</div>
+      <select class="udpi-item-value" name="actionMode" id="actionMode">
+        <option value="toggle-mute">Toggle Mute / Live</option>
+        <option value="toggle-device">Switch Camera</option>
+      </select>
+    </div>
+
+    <div id="switchSection" style="display:none;">
+      <hr class="udpi-divider">
+      <div class="udpi-item">
+        <div class="udpi-item-label">Camera 1</div>
+        <select class="udpi-item-value" name="camIndex1" id="camIndex1">
+          <option value="">-- loading... --</option>
+        </select>
+      </div>
+      <div class="udpi-item">
+        <div class="udpi-item-label">Camera 2</div>
+        <select class="udpi-item-value" name="camIndex2" id="camIndex2">
+          <option value="">-- loading... --</option>
+        </select>
+      </div>
+      <div id="camLoadError" style="display:none;color:#e05252;font-size:12px;margin:4px 0;"></div>
+      <button type="button" class="udpi-btn secondary" id="loadCamsBtn">
+        Reload cameras
+      </button>
+      <button type="button" class="udpi-btn secondary" id="startServiceBtn" style="display:none;margin-top:4px;">
+        Start service
+      </button>
+    </div>
+
+    <hr class="udpi-divider">
+
+    <div class="udpi-item">
+      <div class="udpi-item-label">Virtual Cam Status</div>
+      <div id="vcamStatus" class="udpi-status" style="display:block;">
+        Connecting...
+      </div>
+    </div>
+
+    <button type="button" class="udpi-btn secondary" id="refreshBtn">
+      Refresh status
+    </button>
+
+    <div id="status" class="udpi-status" style="display:none;"></div>
+
+  </form>
+</div>
+
+<script>
+'use strict';
+
+var BRIDGE        = 'http://127.0.0.1:3907';
+var form          = document.getElementById('property-inspector');
+var statusEl      = document.getElementById('status');
+var vcamStatusEl  = document.getElementById('vcamStatus');
+var refreshBtn    = document.getElementById('refreshBtn');
+var loadCamsBtn      = document.getElementById('loadCamsBtn');
+var startServiceBtn  = document.getElementById('startServiceBtn');
+var camLoadError     = document.getElementById('camLoadError');
+var actionModeEl     = document.getElementById('actionMode');
+var switchSection    = document.getElementById('switchSection');
+var currentParams    = {};
+var cameraList       = [];
+
+$UD.connect('com.ulanzi.devcontrol.camera');
+
+$UD.onConnected(function() {
+  checkVcamStatus();
+  loadCameraList();
+});
+
+$UD.onParamFromApp(function(msg) {
+  currentParams = msg.param || {};
+  applyParams();
+});
+
+$UD.onAdd(function(msg) {
+  currentParams = msg.param || {};
+  applyParams();
+  checkVcamStatus();
+});
+
+function applyParams() {
+  if (currentParams.deviceName) document.getElementById('deviceName').value = currentParams.deviceName;
+  if (currentParams.actionMode) {
+    actionModeEl.value = currentParams.actionMode;
+    updateSwitchSection();
+  }
+  if (cameraList.length > 0) {
+    populateCamDropdowns();
+  }
+}
+
+function updateSwitchSection() {
+  switchSection.style.display = (actionModeEl.value === 'toggle-device') ? 'block' : 'none';
+}
+
+function loadCameraList() {
+  camLoadError.style.display    = 'none';
+  startServiceBtn.style.display = 'none';
+  fetch(BRIDGE + '/cameras/virtual/cameras')
+    .then(function(r) { return r.json(); })
+    .then(function(list) {
+      cameraList = Array.isArray(list) ? list : [];
+      if (cameraList.length === 0) {
+        camLoadError.textContent   = 'No cameras found.';
+        camLoadError.style.display = 'block';
+      }
+      populateCamDropdowns();
+    })
+    .catch(function() {
+      cameraList = [];
+      camLoadError.textContent      = 'Virtual cam service not available.';
+      camLoadError.style.display    = 'block';
+      startServiceBtn.style.display = 'block';
+      populateCamDropdowns();
+    });
+}
+
+function populateCamDropdowns() {
+  var sel1 = document.getElementById('camIndex1');
+  var sel2 = document.getElementById('camIndex2');
+  var saved1 = currentParams.camIndex1 !== undefined ? String(currentParams.camIndex1) : '';
+  var saved2 = currentParams.camIndex2 !== undefined ? String(currentParams.camIndex2) : '';
+
+  [sel1, sel2].forEach(function(sel, i) {
+    var savedVal = i === 0 ? saved1 : saved2;
+    sel.innerHTML = '';
+    cameraList.forEach(function(cam) {
+      var opt = document.createElement('option');
+      opt.value = String(cam.index);
+      opt.textContent = '[' + cam.index + '] ' + cam.name;
+      if (String(cam.index) === savedVal) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    if (!savedVal && cameraList.length > i) {
+      sel.value = String(cameraList[i].index);
+    }
+  });
+}
+
+function checkVcamStatus() {
+  vcamStatusEl.className     = 'udpi-status';
+  vcamStatusEl.style.display = 'block';
+  vcamStatusEl.textContent   = 'Connecting...';
+
+  fetch(BRIDGE + '/cameras/virtual/status')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var camInfo = data.cameraIndex >= 0 ? ' (Index ' + data.cameraIndex + ')' : '';
+      if (data.muted) {
+        vcamStatusEl.style.borderColor = '#e05252';
+        vcamStatusEl.style.color       = '#e05252';
+        vcamStatusEl.textContent       = 'Virtual cam running - Video: BLACK (muted)' + camInfo;
+      } else {
+        vcamStatusEl.style.borderColor = '#4caf50';
+        vcamStatusEl.style.color       = '#4caf50';
+        vcamStatusEl.textContent       = 'Virtual cam running - Video: LIVE' + camInfo;
+      }
+    })
+    .catch(function() {
+      vcamStatusEl.style.borderColor = '#f0a030';
+      vcamStatusEl.style.color       = '#f0a030';
+      vcamStatusEl.textContent       = '[!] Virtual cam service not available. Start bridge or run installer.';
+    });
+}
+
+actionModeEl.addEventListener('change', function() {
+  updateSwitchSection();
+  saveParams();
+});
+
+form.addEventListener('change', function(e) {
+  if (e.target === actionModeEl) return;
+  saveParams();
+});
+
+function saveParams() {
+  var values = Utils.getFormValue(form);
+  var sel1 = document.getElementById('camIndex1');
+  var sel2 = document.getElementById('camIndex2');
+  values.camIndex1 = sel1.value !== '' ? parseInt(sel1.value, 10) : undefined;
+  values.camIndex2 = sel2.value !== '' ? parseInt(sel2.value, 10) : undefined;
+  currentParams = Object.assign({}, currentParams, values);
+  $UD.sendParamFromPlugin(currentParams);
+  showStatus('Saved', 'ok');
+  setTimeout(hideStatus, 2000);
+}
+
+refreshBtn.addEventListener('click', checkVcamStatus);
+
+startServiceBtn.addEventListener('click', function() {
+  startServiceBtn.disabled    = true;
+  startServiceBtn.textContent = 'Starting...';
+  fetch(BRIDGE + '/cameras/virtual/restart', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+    .then(function() {
+      return new Promise(function(res) { setTimeout(res, 4000); });
+    })
+    .then(function() {
+      startServiceBtn.disabled    = false;
+      startServiceBtn.textContent = 'Start service';
+      loadCameraList();
+      checkVcamStatus();
+    })
+    .catch(function() {
+      startServiceBtn.disabled    = false;
+      startServiceBtn.textContent = 'Start service';
+    });
+});
+loadCamsBtn.addEventListener('click', loadCameraList);
+
+function showStatus(msg, type) {
+  statusEl.textContent   = msg;
+  statusEl.className     = 'udpi-status ' + type;
+  statusEl.style.display = 'block';
+}
+function hideStatus() { statusEl.style.display = 'none'; }
+</script>
+</body>
+</html>
