@@ -72,7 +72,7 @@ The installer will automatically:
 
 ## Uninstallation
 
-1. Go to `%APPDATA%\Ulanzi\UlanziDeck\Plugins\com.ulanzi.devcontrol.ulanziPlugin` and start "Deinstallieren.bat"
+1. Go to `%APPDATA%\Ulanzi\UlanziDeck\Plugins\com.ulanzi.devpilot.ulanziPlugin` and start "Deinstallieren.bat"
 2. After the script finishes, please restart your System
 
 Removes both Task Scheduler tasks, stops all services, unregisters the Unity Capture DirectShow filter, and deletes the plugin folder.
@@ -96,8 +96,8 @@ Ulanzi Studio
 
 | Service | Port | Technology | Purpose |
 |---|---|---|---|
-| `UlanziDevControlBridge` | 3907 | Node.js | Audio COM calls, camera enumeration |
-| `UlanziVirtualCamService` | 5000 | Python / FastAPI | Webcam capture → virtual cam output |
+| `DevicePilotBridge` | 3907 | Node.js | Audio COM calls, camera enumeration |
+| `DevicePilotVirtualCamService` | 5000 | Python / FastAPI | Webcam capture → virtual cam output |
 
 Both services start automatically at Windows login (Task Scheduler, `RunLevel Limited` – no admin needed).
 
@@ -131,7 +131,7 @@ Camera dropdowns are populated automatically from all connected physical cameras
 ## Troubleshooting
 
 **"Bridge not ready" on button press**
-- Check that the Task Scheduler task `UlanziDevControlBridge` is running.
+- Check that the Task Scheduler task `DevicePilotControlBridge` is running.
 - Restart it: *Task Scheduler → UlanziDevControlBridge → Run*
 - Or simply re-run the installer.
 
@@ -151,7 +151,7 @@ Camera dropdowns are populated automatically from all connected physical cameras
 **"Unity Video Capture" not showing in Teams / Zoom**
 - Re-register the DirectShow filter as Administrator:
   ```
-  regsvr32 "%APPDATA%\Ulanzi\UlanziDeck\Plugins\com.ulanzi.devcontrol.ulanziPlugin\native\webcam-mute\UnityCaptureFilter64.dll"
+  regsvr32 "%APPDATA%\Ulanzi\UlanziDeck\Plugins\com.ulanzi.devpilot.ulanziPlugin\native\webcam-mute\UnityCaptureFilter64.dll"
   ```
 - Restart the conferencing app.
 
