@@ -61,8 +61,8 @@ The installer will automatically:
 - Install Python packages: `opencv-python`, `pyvirtualcam`, `fastapi`, `uvicorn`, `pygrabber`
 - Download and register the **Unity Capture** DirectShow filter (MIT license, ~500 KB)
 - Register two autostart services in Windows Task Scheduler (no admin, user-level):
-  - `UlanziDevControlBridge` – Node.js HTTP bridge on port 3907
-  - `UlanziVirtualCamService` – Python virtual cam service on port 5000
+  - `DevicePilotBridge` – Node.js HTTP bridge on port 3907
+  - `DevicePilotVirtualCamService` – Python virtual cam service on port 5000
 - Start both services immediately
 
 3. Restart your System after the script finished
@@ -131,8 +131,8 @@ Camera dropdowns are populated automatically from all connected physical cameras
 ## Troubleshooting
 
 **"Bridge not ready" on button press**
-- Check that the Task Scheduler task `DevicePilotControlBridge` is running.
-- Restart it: *Task Scheduler → UlanziDevControlBridge → Run*
+- Check that the Task Scheduler task `DevicePilotBridge` is running.
+- Restart it: *Task Scheduler → DevicePilotBridge → Run*
 - Or simply re-run the installer.
 
 **Camera property inspector shows "Virtual cam service not available"**
