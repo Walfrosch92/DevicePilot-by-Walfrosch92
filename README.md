@@ -13,9 +13,8 @@ One-tap system-wide control over **audio output**, **microphone**, and **virtual
 | **Camera** | Mute / unmute virtual cam (black frame ↔ live) · Switch between 2 physical cameras |
 
 - Button icons update live to reflect the current state
-- Device names shown directly on the button
-- Windows toast notification on every action
-- No admin rights required
+- Toast notification on every action
+- No admin rights required, only for install
 
 ---
 
@@ -42,7 +41,7 @@ The virtual device appears as **"Unity Video Capture"** in any video conferencin
 | Component | Minimum version |
 |---|---|
 | Windows | 10 / 11 (x64) |
-| Ulanzi Studio | 6.1 or newer |
+| Ulanzi Studio |
 | Node.js | 18 LTS or newer |
 | Python | 3.10 or newer |
 
@@ -53,11 +52,7 @@ The installer handles all missing dependencies automatically.
 ## Installation
 
 1. Download or clone this repository.
-2. Open **PowerShell as Administrator** and run:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File ".\installer\install.ps1"
-```
+2. Open the downloaded Folder and start "Installieren.bat" 
 
 The installer will automatically:
 - Install Node.js (via winget or direct download) if missing
@@ -70,15 +65,15 @@ The installer will automatically:
   - `UlanziVirtualCamService` – Python virtual cam service on port 5000
 - Start both services immediately
 
-3. Start **Ulanzi Studio** — the *Device Pilot* plugin appears in the action list.
+3. Restart your System after the script finished
+4. Start **Ulanzi Studio** — the *Device Pilot* plugin appears in the action list.
 
 ---
 
 ## Uninstallation
 
-```powershell
-powershell -ExecutionPolicy Bypass -File ".\installer\uninstall.ps1"
-```
+1. Go to `%APPDATA%\Ulanzi\UlanziDeck\Plugins\com.ulanzi.devcontrol.ulanziPlugin` and start "Deinstallieren.bat"
+2. After the script finishes, please restart your System
 
 Removes both Task Scheduler tasks, stops all services, unregisters the Unity Capture DirectShow filter, and deletes the plugin folder.
 
@@ -142,6 +137,7 @@ Camera dropdowns are populated automatically from all connected physical cameras
 
 **Camera property inspector shows "Virtual cam service not available"**
 - Click **Start service** — the bridge will launch `main.py` as a fallback.
+- Make sure you restarted your System after installation.
 - If it still fails, check that Python and all packages are installed:
   ```
   python -m pip install pyvirtualcam opencv-python fastapi uvicorn pygrabber
@@ -150,6 +146,7 @@ Camera dropdowns are populated automatically from all connected physical cameras
 **Camera list is empty or only shows "Unity Video Capture"**
 - Make sure your webcam is connected before opening the property inspector.
 - Click **Reload cameras** to re-enumerate.
+- Make sure you restarted your System after installation.
 
 **"Unity Video Capture" not showing in Teams / Zoom**
 - Re-register the DirectShow filter as Administrator:
