@@ -4,12 +4,12 @@ One-tap system-wide control over **audio output**, **microphone**, and **virtual
 
 ---
 
-> ⚠️ **Note:** This is a third-party app and not an official product of Ulanzi
+> ⚠️ **Note:** This is a third-party plugin and not an official product of Ulanzi
 
 ---
 
 ☕ **Support appreciated**  
-**If you like the APP, I'd appreciate a small contribution on [Buy Me a Coffee](https://buymeacoffee.com/walfrosch92).**
+**If you like the Plugin, I'd appreciate a small contribution on [Buy Me a Coffee](https://buymeacoffee.com/walfrosch92).**
 
 ---
 
