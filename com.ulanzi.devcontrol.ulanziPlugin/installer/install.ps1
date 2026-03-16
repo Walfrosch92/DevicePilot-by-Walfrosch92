@@ -520,4 +520,6 @@ Write-Host "  4. Kamera-Button auf das Deck ziehen und Name vergeben" -Foregroun
 Write-Host ""
 Write-Host "Plugin-Ordner: $PluginDest" -ForegroundColor DarkGray
 Write-Host ""
-Read-Host "  Druecke Enter zum Beenden"
+Read-Host "  Druecke Enter zum Beenden & starte dein System neu"
+Write-Host ""
+Read-Host "  Please restart your System!"
